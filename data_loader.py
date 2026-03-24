@@ -1,6 +1,7 @@
 # data_loader.py
 import numpy as np
 import pandas as pd
+from numpy import load
 from sklearn.preprocessing import MinMaxScaler
 import config
 
@@ -24,6 +25,25 @@ def create_dataset(location, traffic, WINDOW_SIZE):
 
 def load_data():
     """加载并预处理数据，返回训练/验证/测试集及归一化器"""
+    data = load(config.ORIGN_DATA_PATH)
+    lst = data.files
+    traffic_data = data[lst[0]]
+    print(f"原始数据形状: {traffic_data.shape}")
+
+    # 将三维数组转换为 DataFrame（每个时间步、每个位置一行）
+    data_dict = []
+    for timestep in range(traffic_data.shape[0]):
+        for location in range(traffic_data.shape[1]):
+            data_dict.append({
+                "timestep": timestep + 1,
+                "location": location,
+                "flow": traffic_data[timestep][location][0],
+                "occupy": traffic_data[timestep][location][1],
+                "speed": traffic_data[timestep][location][2]
+            })
+
+    df = pd.DataFrame(data_dict)
+    df.to_csv(config.DATA_PATH, index=False)
     traffic = pd.read_csv(config.DATA_PATH)
 
     # 获取传感器数量
